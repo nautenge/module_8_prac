@@ -1,1 +1,133 @@
+using System;
 
+public abstract class ReportGenerator
+{
+    public void GenerateReport()
+    {
+        CollectData();
+        FormatData();
+        if (CustomerWantsSave())
+        {
+            SaveReport();
+        }
+        Hook();
+    }
+
+    protected virtual void CollectData()
+    {
+        Console.WriteLine("Collecting data for the report...");
+    }
+
+    protected abstract void FormatData();
+
+    protected virtual void SaveReport()
+    {
+        Console.WriteLine("Saving report to file...");
+    }
+
+    protected virtual void Hook() { }
+
+    protected virtual bool CustomerWantsSave()
+    {
+        while (true)
+        {
+            Console.WriteLine("Do you want to save the report? (yes/no)");
+            string answer = Console.ReadLine().ToLower();
+            if (answer == "yes" || answer == "no")
+            {
+                return answer == "yes";
+            }
+            Console.WriteLine("Invalid input, please type 'yes' or 'no'.");
+        }
+    }
+}
+
+public class PdfReport : ReportGenerator
+{
+    protected override void FormatData()
+    {
+        Console.WriteLine("Formatting data for PDF report...");
+    }
+
+    protected override void Hook()
+    {
+        Console.WriteLine("Additional step for PDF report...");
+    }
+}
+
+public class ExcelReport : ReportGenerator
+{
+    protected override void FormatData()
+    {
+        Console.WriteLine("Formatting data for Excel report...");
+    }
+
+    protected override void SaveReport()
+    {
+        Console.WriteLine("Saving Excel report as .xlsx file...");
+    }
+
+    protected override void Hook()
+    {
+        Console.WriteLine("Sending Excel report via email...");
+    }
+}
+
+public class HtmlReport : ReportGenerator
+{
+    protected override void FormatData()
+    {
+        Console.WriteLine("Formatting data for HTML report...");
+    }
+
+    protected override void SaveReport()
+    {
+        Console.WriteLine("Saving HTML report as .html file...");
+    }
+}
+
+public class CsvReport : ReportGenerator
+{
+    protected override void FormatData()
+    {
+        Console.WriteLine("Formatting data for CSV report...");
+    }
+
+    protected override void SaveReport()
+    {
+        Console.WriteLine("Saving CSV report as .csv file...");
+    }
+
+    protected override void Hook()
+    {
+        Console.WriteLine("Performing additional operations for CSV report...");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Console.WriteLine("Generating PDF Report:");
+        ReportGenerator pdfReport = new PdfReport();
+        pdfReport.GenerateReport();
+
+        Console.WriteLine();
+
+        Console.WriteLine("Generating Excel Report:");
+        ReportGenerator excelReport = new ExcelReport();
+        excelReport.GenerateReport();
+
+        Console.WriteLine();
+
+        Console.WriteLine("Generating HTML Report:");
+        ReportGenerator htmlReport = new HtmlReport();
+        htmlReport.GenerateReport();
+
+        Console.WriteLine();
+
+        Console.WriteLine("Generating CSV Report:");
+        ReportGenerator csvReport = new CsvReport();
+        csvReport.GenerateReport();
+    }
+}
