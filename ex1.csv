@@ -1,0 +1,194 @@
+using System;
+using System.Collections.Generic;
+
+public interface ICommand
+{
+    void Execute();
+    void Undo();
+}
+
+public class Light
+{
+    public void On() => Console.WriteLine("Light is On");
+    public void Off() => Console.WriteLine("Light is Off");
+}
+
+public class LightOnCommand : ICommand
+{
+    private Light _light;
+
+    public LightOnCommand(Light light) => _light = light;
+
+    public void Execute() => _light.On();
+
+    public void Undo() => _light.Off();
+}
+
+public class LightOffCommand : ICommand
+{
+    private Light _light;
+
+    public LightOffCommand(Light light) => _light = light;
+
+    public void Execute() => _light.Off();
+
+    public void Undo() => _light.On();
+}
+
+public class AirConditioner
+{
+    public void On() => Console.WriteLine("AirConditioner is On");
+    public void Off() => Console.WriteLine("AirConditioner is Off");
+}
+
+public class AirConditionerOnCommand : ICommand
+{
+    private AirConditioner _ac;
+
+    public AirConditionerOnCommand(AirConditioner ac) => _ac = ac;
+
+    public void Execute() => _ac.On();
+
+    public void Undo() => _ac.Off();
+}
+
+public class AirConditionerOffCommand : ICommand
+{
+    private AirConditioner _ac;
+
+    public AirConditionerOffCommand(AirConditioner ac) => _ac = ac;
+
+    public void Execute() => _ac.Off();
+
+    public void Undo() => _ac.On();
+}
+
+public class RemoteControl
+{
+    private ICommand[] _onCommands;
+    private ICommand[] _offCommands;
+    private Stack<ICommand> _commandHistory;
+
+    public RemoteControl(int slotCount)
+    {
+        _onCommands = new ICommand[slotCount];
+        _offCommands = new ICommand[slotCount];
+        _commandHistory = new Stack<ICommand>();
+
+        ICommand noCommand = new NoCommand();
+        for (int i = 0; i < slotCount; i++)
+        {
+            _onCommands[i] = noCommand;
+            _offCommands[i] = noCommand;
+        }
+    }
+
+    public void SetCommand(int slot, ICommand onCommand, ICommand offCommand)
+    {
+        _onCommands[slot] = onCommand;
+        _offCommands[slot] = offCommand;
+    }
+
+    public void OnButtonPressed(int slot)
+    {
+        if (_onCommands[slot] != null)
+        {
+            _onCommands[slot].Execute();
+            _commandHistory.Push(_onCommands[slot]);
+        }
+        else
+        {
+            Console.WriteLine("No command assigned to this slot.");
+        }
+    }
+
+    public void OffButtonPressed(int slot)
+    {
+        if (_offCommands[slot] != null)
+        {
+            _offCommands[slot].Execute();
+            _commandHistory.Push(_offCommands[slot]);
+        }
+        else
+        {
+            Console.WriteLine("No command assigned to this slot.");
+        }
+    }
+
+    public void UndoButtonPressed()
+    {
+        if (_commandHistory.Count > 0)
+        {
+            ICommand lastCommand = _commandHistory.Pop();
+            lastCommand.Undo();
+        }
+        else
+        {
+            Console.WriteLine("No commands to undo.");
+        }
+    }
+}
+
+public class NoCommand : ICommand
+{
+    public void Execute() => Console.WriteLine("No command assigned.");
+    public void Undo() => Console.WriteLine("No command to undo.");
+}
+
+public class MacroCommand : ICommand
+{
+    private List<ICommand> _commands;
+
+    public MacroCommand(List<ICommand> commands) => _commands = commands;
+
+    public void Execute()
+    {
+        foreach (var command in _commands)
+        {
+            command.Execute();
+        }
+    }
+
+    public void Undo()
+    {
+        foreach (var command in _commands)
+        {
+            command.Undo();
+        }
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Light livingRoomLight = new Light();
+        AirConditioner airConditioner = new AirConditioner();
+
+        ICommand lightOn = new LightOnCommand(livingRoomLight);
+        ICommand lightOff = new LightOffCommand(livingRoomLight);
+        ICommand acOn = new AirConditionerOnCommand(airConditioner);
+        ICommand acOff = new AirConditionerOffCommand(airConditioner);
+
+        RemoteControl remote = new RemoteControl(2);
+
+        remote.SetCommand(0, lightOn, lightOff);
+        remote.SetCommand(1, acOn, acOff);
+
+        remote.OnButtonPressed(0);
+        remote.OffButtonPressed(0);
+        remote.UndoButtonPressed();
+
+        remote.OnButtonPressed(1);
+        remote.OffButtonPressed(1);
+        remote.UndoButtonPressed();
+
+        List<ICommand> morningRoutine = new List<ICommand> { lightOn, acOn };
+        MacroCommand morningMacro = new MacroCommand(morningRoutine);
+
+        Console.WriteLine("Executing morning routine:");
+        morningMacro.Execute();
+        Console.WriteLine("Undoing morning routine:");
+        morningMacro.Undo();
+    }
+}
